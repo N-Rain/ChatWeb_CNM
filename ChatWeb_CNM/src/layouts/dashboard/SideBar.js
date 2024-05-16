@@ -1,13 +1,31 @@
-import { Box, Button, Stack, Menu, MenuItem, Avatar } from "@mui/material";
+import { Box, Button, Stack, Menu, MenuItem, Avatar, Typography,Fade } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import React, { useState } from "react";
 import { SignOut } from "phosphor-react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { Profile_Menu, Nav_Buttons } from "../../data";
-import { faker } from "@faker-js/faker";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { LogoutUser } from "../../redux/slices/auth";
+import { socket } from "../../socket";
+import { faker } from "@faker-js/faker";
+import {
+  User,
+  Gear,
+} from "phosphor-react";
+import { UpdateTab } from "../../redux/slices/app";
 
+const getPath = (index) => {
+  switch (index) {
+    case 0:
+      return "/app";
+
+    case 1:
+      return "/contact";
+
+    default:
+      break;
+  }
+};
 const SideBar = () => {
   const dispatch = useDispatch();
   const theme = useTheme();
@@ -15,15 +33,21 @@ const SideBar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const navigate = useNavigate();
-
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
-
+  const { tab } = useSelector((state) => state.app);
+  const selectedTab = tab;
+  const handleChangeTab = (index) => {
+    dispatch(UpdateTab({ tab: index }));
+    navigate(getPath(index));
+  };
   const handleClose = () => {
     setAnchorEl(null);
   };
 
+  const user_id = window.localStorage.getItem("user_id");
+  const openMenu = Boolean(anchorEl);  
   return (
     <Box
       paddingTop={2}
@@ -50,53 +74,59 @@ const SideBar = () => {
             aria-expanded={open ? "true" : undefined}
             onClick={handleClick}
           />
-          <Menu
-            id="basic-menu"
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleClose}
-            MenuListProps={{
-              "aria-labelledby": "basic-button",
-            }}
-            PaperProps={{
-              style: {
-                backgroundColor: "white",
-              },
-            }}
-          >
-            <Stack spacing={1} px={1}>
-              {Profile_Menu.map((el, idx) => (
-                <MenuItem
-                  key={idx}
+                 <Menu
+        MenuListProps={{
+          "aria-labelledby": "fade-button",
+        }}
+        TransitionComponent={Fade}
+        id="profile-positioned-menu"
+        aria-labelledby="profile-positioned-button"
+        anchorEl={anchorEl}
+        open={openMenu}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+      >
+        <Box p={1}>
+        <Stack spacing={1} px={1}>
+            {Profile_Menu.map((el, idx) => (
+              <MenuItem onClick={handleClose}>
+                <Stack
                   onClick={() => {
-                    handleClick();
-                    dispatch(LogoutUser());
-                    window.localStorage.clear();
-                  }}
-                >
-                  <Stack
-                    onClick={() => {
-                      handleClick();
+                    if(idx === 0) {
+                      navigate("/profile");
+                    }
+                    else if(idx === 1) {
+                      navigate("/settings");
+                    }
+                    else {
                       dispatch(LogoutUser());
-                      window.localStorage.clear();
-                    }}
-                    component={RouterLink}
-                    to="/auth/login"
-                    sx={{ width: 100 }}
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <span>{el.title}</span>
-                    {el.icon}
-                  </Stack>{" "}
-                </MenuItem>
-              ))}
-            </Stack>
-          </Menu>
+                      socket.emit("end", {user_id});
+                    }
+                  }}
+                  sx={{ width: 100 }}
+                  direction="row"
+                  alignItems={"center"}
+                  justifyContent="space-between"
+                >
+                  <span>{el.title}</span>
+                  {el.icon}
+                </Stack>{" "}
+              </MenuItem>
+            ))}
+          </Stack>
+        </Box>
+      </Menu>
+          
 <Stack spacing={0}>
             {Nav_Buttons.map((el) =>
-              el.index === selected ? (
+              el.index === selectedTab ? (
                 <Box
                   key={el.index}
                   sx={{ backgroundColor: theme.palette.primary.main1 }}
@@ -104,6 +134,9 @@ const SideBar = () => {
                   <Button
                     sx={{ width: 65, height: 65, color: "#fff" }}
                     key={el.index}
+                    onClick={() => {
+                      handleChangeTab(el.index);
+                    }}
                   >
                     {el.icon}
                   </Button>
@@ -112,7 +145,7 @@ const SideBar = () => {
                 <Button
                   key={el.index}
                   onClick={() => {
-                    setSelected(el.index);
+                    handleChangeTab(el.index);
                   }}
                   sx={{ width: 65, height: 65, color: "#000" }}
                 >

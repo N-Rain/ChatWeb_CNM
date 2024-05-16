@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Box, Stack, Typography, IconButton, Avatar, Button, Divider, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Slide } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { ToggleSidebar, UpdateSidebarType } from '../redux/slices/app';
@@ -6,6 +6,8 @@ import { X } from '@mui/icons-material';
 import { faker } from '@faker-js/faker';
 import { CaretRight, Prohibit, Trash } from 'phosphor-react';
 import { useDispatch, useSelector } from 'react-redux';
+import { BASE_URL } from '../config';
+import { io } from "socket.io-client";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -49,7 +51,7 @@ const BlockDialog = ({ open, handleClose }) => {
   )
 }
 
-const DeleteDialog = ({ open, handleClose }) => {
+const DeleteDialog = ({ open, handleClose, handleDelete }) => {
   return (
     <Dialog
       open={open}
@@ -76,7 +78,7 @@ const DeleteDialog = ({ open, handleClose }) => {
             backgroundColor: '#ff69b4',
           }
         }}>Hủy</Button>
-        <Button onClick={handleClose} sx={{
+        <Button onClick={handleDelete} sx={{
           backgroundColor: "#ffb4d8",
           '&:hover': {
             backgroundColor: '#ff69b4',
@@ -92,13 +94,33 @@ const Contact = () => {
   const dispatch = useDispatch();
   const [openBlock, setOpenBlock] = useState(false)
   const [openDelete, setOpenDelete] = useState(false)
+  const { current_conversation } = useSelector((state) => state.conversation.direct_chat);
+  const socketRef = useRef();
+
+  useEffect(() => {
+    // Kết nối với socket server
+    socketRef.current = io(BASE_URL);
+    return () => {
+      // Đóng kết nối socket khi component unmount
+      socketRef.current.disconnect();
+    };
+  }, []);
+
   const handleCloseBlock = () => {
     setOpenBlock(false);
   }
+
   const handleCloseDelete = () => {
     setOpenDelete(false);
   }
-  const { current_conversation } = useSelector((state) => state.conversation.direct_chat);
+
+  const handleDelete = () => {
+    // Gửi yêu cầu xóa tin nhắn thông qua socket
+    socketRef.current.emit("DELETE_MSG", { messageId: current_conversation._id });
+    // Đóng dialog xác nhận xóa tin nhắn
+    setOpenDelete(false);
+  }
+
   return (
     <Box sx={{ width: 300, height: "100vh" }}>
       <Stack sx={{ height: "100%" }}>
@@ -167,4 +189,5 @@ const Contact = () => {
     </Box >
   )
 }
+
 export default Contact;

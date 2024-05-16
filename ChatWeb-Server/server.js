@@ -25,15 +25,38 @@ const io = new Server(server, {
   },
 });
 const DB = process.env.DBURI.replace("<PASSWORD>", process.env.DBPASSWORD);
+const multer = require("multer");
+const aws = require("aws-sdk");
+const multerS3 = require("multer-s3");
+// const dotenv = require("dotenv");
 
-// mongoose.connect(DB, {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-// }).then(() => {
-//     console.log("Kết nối DB thành công");
-// }).catch((err) => {
-//     console.log(err);
-// });
+// dotenv.config({ path: "./.env" });
+
+// Cấu hình AWS
+const s3 = new aws.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION
+});
+
+// Cấu hình multer để tải file lên S3
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: process.env.S3_BUCKET_NAME,
+    acl: "public-read", // Đảm bảo rằng file có thể được đọc từ công khai
+    metadata: function (req, file, cb) {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString()); // Khóa của file trên S3 (thay đổi tên file nếu cần)
+    }
+  })
+});
+
+// Áp dụng middleware upload vào các yêu cầu PATCH /user/update-me
+
+
 mongoose
   .connect(DB)
   .then(() => {
@@ -47,6 +70,16 @@ const port = process.env.PORT || 8000;
 server.listen(port, () => {
   console.log(`Web đang chạy trên cổng ${port}`);
 });
+// Import định tuyến cho tin nhắn
+const messageRoute = require("./routes/message");
+
+// Middleware
+// app.use(express.json());
+
+// Sử dụng định tuyến cho tin nhắn
+app.use("/message", messageRoute);
+
+
 io.on("connection", async (socket) => {
   console.log(`User connected ${socket.id}`);
   console.log(JSON.stringify(socket.handshake.query));
@@ -142,9 +175,7 @@ io.on("connection", async (socket) => {
     // fetch OneToOneMessage Doc & push a new message to existing conversation
     const chat = await OneToOneMessage.findById(conversation_id);
     chat.messages.push(new_message);
-    //gr chat
-    const grChat = await GroupMessage.findById(title);
-    // grChat.messages.push(new_message);
+
     // save to db`
     await chat.save({ new: true, validateModifiedOnly: true });
 
@@ -164,44 +195,44 @@ io.on("connection", async (socket) => {
     });
   });
 
-  //gr
-  socket.on("text_message_group", async (data) => {
-    const { message, groupId, senderId } = data;
+  // //gr
+  // socket.on("text_message_group", async (data) => {
+  //   const { message, groupId, senderId } = data;
 
-    try {
-      // Tìm nhóm chat và kiểm tra xem người gửi có là thành viên của nhóm không
-      const group = await GroupMessage.findById(groupId);
-      if (!group || !group.members.includes(senderId)) {
-        console.error("Sender is not a member of this group");
-        return;
-      }
+  //   try {
+  //     // Tìm nhóm chat và kiểm tra xem người gửi có là thành viên của nhóm không
+  //     const group = await GroupMessage.findById(groupId);
+  //     if (!group || !group.members.includes(senderId)) {
+  //       console.error("Sender is not a member of this group");
+  //       return;
+  //     }
 
-      // Lưu tin nhắn vào nhóm chat
-      group.messages.push({
-        type: "Text",
-        created_at: Date.now(),
-        text: message,
-        sender: senderId,
-      });
+  //     // Lưu tin nhắn vào nhóm chat
+  //     group.messages.push({
+  //       type: "Text",
+  //       created_at: Date.now(),
+  //       text: message,
+  //       sender: senderId,
+  //     });
 
-      await group.save();
+  //     await group.save();
 
-      // Gửi tin nhắn đến tất cả các thành viên trong nhóm
-      group.members.forEach((memberId) => {
-        io.to(memberId).emit("new_group_message", {
-          groupId,
-          message: {
-            type: "Text",
-            created_at: Date.now(),
-            text: message,
-            sender: senderId,
-          },
-        });
-      });
-    } catch (error) {
-      console.error("Error sending group message:", error);
-    }
-  });
+  //     // Gửi tin nhắn đến tất cả các thành viên trong nhóm
+  //     group.members.forEach((memberId) => {
+  //       io.to(memberId).emit("new_group_message", {
+  //         groupId,
+  //         message: {
+  //           type: "Text",
+  //           created_at: Date.now(),
+  //           text: message,
+  //           sender: senderId,
+  //         },
+  //       });
+  //     });
+  //   } catch (error) {
+  //     console.error("Error sending group message:", error);
+  //   }
+  // });
   //
 
   socket.on("file_message", (data) => {
@@ -231,19 +262,10 @@ io.on("connection", async (socket) => {
     callback(existing_conversations);
   });
 
-  //gr
-  socket.on("get_direct_conversations_group", async ({ title }, callback) => {
-    const existing_conversations = await GroupMessage.find({
-      members: { $all: [title] },
-    }).populate("members", "title");
 
-    // db.books.find({ authors: { $elemMatch: { name: "John Smith" } } })
-
-    console.log(existing_conversations);
-
-    callback(existing_conversations);
-  });
-
+  socket.on("DELETE_MSG", (msg) => {
+    socket.to(msg.receiver.socketId).emit("DELETED_MSG", msg)
+  })
   socket.on("start_conversation", async (data) => {
     // data: {to: from:}
 
@@ -279,60 +301,60 @@ io.on("connection", async (socket) => {
   });
 
   //gr
-  socket.on("start_conversation_group", async (data) => {
-    // data: {to: from:}
+  // socket.on("start_conversation_group", async (data) => {
+  //   // data: {to: from:}
 
-    const { to, from } = data;
+  //   const { to, from } = data;
 
-    // check if there is any existing conversation
+  //   // check if there is any existing conversation
 
-    const existing_conversations = await GroupMessage.find({
-      members: { $size: 2, $all: [to, from] },
-    }).populate("members", "firstName lastName _id email status");
+  //   const existing_conversations = await GroupMessage.find({
+  //     members: { $size: 2, $all: [to, from] },
+  //   }).populate("members", "firstName lastName _id email status");
 
-    console.log(existing_conversations[0], "Existing Conversation");
+  //   console.log(existing_conversations[0], "Existing Conversation");
 
-    // if no => create a new GroupMessage doc & emit event "start_chat" & send conversation details as payload
-    if (existing_conversations.length === 0) {
-      let new_chat = await GroupMessage.create({
-        members: [to, from],
-      });
+  //   // if no => create a new GroupMessage doc & emit event "start_chat" & send conversation details as payload
+  //   if (existing_conversations.length === 0) {
+  //     let new_chat = await GroupMessage.create({
+  //       members: [to, from],
+  //     });
 
-      new_chat = await GroupMessage.findById(new_chat).populate(
-        "members",
-        "firstName lastName _id email status"
-      );
+  //     new_chat = await GroupMessage.findById(new_chat).populate(
+  //       "members",
+  //       "firstName lastName _id email status"
+  //     );
 
-      console.log(new_chat);
+  //     console.log(new_chat);
 
-      socket.emit("start_chat_group", new_chat);
-    }
-    // if yes => just emit event "start_chat" & send conversation details as payload
-    else {
-      socket.emit("start_chat_group", existing_conversations[0]);
-    }
-  });
+  //     socket.emit("start_chat_group", new_chat);
+  //   }
+  //   // if yes => just emit event "start_chat" & send conversation details as payload
+  //   else {
+  //     socket.emit("start_chat_group", existing_conversations[0]);
+  //   }
+  // });
 
-  socket.on("get_messages", async (data, callback) => {
-    try {
-      const { messages } = await OneToOneMessage.findById(
-        data.conversation_id
-      ).select("messages");
-      callback(messages);
-    } catch (error) {
-      console.log(error);
-    }
-  });
+  // socket.on("get_messages", async (data, callback) => {
+  //   try {
+  //     const { messages } = await OneToOneMessage.findById(
+  //       data.conversation_id
+  //     ).select("messages");
+  //     callback(messages);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // });
 
-  //gr
-  socket.on("get_messages_group", async (data, callback) => {
-    try {
-      const { messages } = await GroupMessage.findById(data.groupId).select("messages");
-      callback(messages);
-    } catch (error) {
-      console.error(error);
-    }
-  });
+  // //gr
+  // socket.on("get_messages_group", async (data, callback) => {
+  //   try {
+  //     const { messages } = await GroupMessage.findById(data.groupId).select("messages");
+  //     callback(messages);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // });
   // Tạo nhóm chat mới
   socket.on("create_group", async (data) => {
     try {
@@ -350,20 +372,20 @@ io.on("connection", async (socket) => {
     }
   });
   // Tham gia vào nhóm chat đã tồn tại
-  socket.on("join_group", async (data) => {
-    try {
-      const { groupId, userId } = data;
-      const group = await GroupMessage.findById(groupId);
+  //   socket.on("join_group", async (data) => {
+  //     try {
+  //       const { groupId, userId } = data;
+  //       const group = await GroupMessage.findById(groupId);
 
-      if (group && !group.members.includes(userId)) {
-        group.members.push(userId);
-        await group.save();
-        io.to(userId).emit("joined_group", group);
-      }
-    } catch (error) {
-      console.error("Error joining group:", error);
-    }
-  });
+  //       if (group && !group.members.includes(userId)) {
+  //         group.members.push(userId);
+  //         await group.save();
+  //         io.to(userId).emit("joined_group", group);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error joining group:", error);
+  //     }
+  //   });
 });
 
 

@@ -124,7 +124,8 @@ const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
       onClick={() => {
         console.log("Chat box clicked:", id);
         dispatch(SelectConversation({ room_id: id }));
-      }}
+        window.location.reload();
+      }}  
       sx={{
         width: "100%",
 
@@ -158,7 +159,7 @@ const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
           )}
           <Stack spacing={0.3}>
             <Typography variant="subtitle2">{name}</Typography>
-            <Typography variant="caption">{truncateText(msg, 20)}</Typography>
+            {/* <Typography variant="caption">{truncateText(msg, 20)}</Typography> */}
           </Stack>
         </Stack>
         <Stack spacing={2} alignItems={"center"}>
@@ -219,18 +220,18 @@ const Chats = () => {
   const handleOpenDialog = () => {
     setOpenDialog(true);
   };
-  //grmsg
-  const [groupChats, setGroupChats] = useState([]);
-  // Xử lý sự kiện nhận danh sách cuộc trò chuyện nhóm từ server
-  useEffect(() => {
-    socket.on("text_message_group", (data) => {
-      setGroupChats(data);
-    });
+  // // //grmsg
+  // // const [groupChats, setGroupChats] = useState([]);
+  // // // Xử lý sự kiện nhận danh sách cuộc trò chuyện nhóm từ server
+  // // useEffect(() => {
+  // //   socket.on("text_message_group", (data) => {
+  // //     setGroupChats(data);
+  // //   });
 
-    return () => {
-      socket.off("text_message_group");
-    };
-  }, []);
+  //   return () => {
+  //     socket.off("text_message_group");
+  //   };
+  // }, []);
   return (
     <>
       <Box
@@ -303,7 +304,7 @@ const Chats = () => {
                 </Typography>
               }
             />
-            <Tab
+            {/* <Tab
               value="two"
               label={
                 <Typography
@@ -318,7 +319,7 @@ const Chats = () => {
                   Chưa đọc
                 </Typography>
               }
-            />
+            /> */}
             <Tab
               value="three"
               label={

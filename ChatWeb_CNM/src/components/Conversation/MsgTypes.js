@@ -144,7 +144,7 @@ const TextMsg = ({ el }) => {
         }}>
         <Typography variant="body2"
           color={el.incoming ? theme.palette.text : "#000"}>
-          {el.message}
+          {el.message}z
         </Typography>
       </Box>
       <MessageOptions />

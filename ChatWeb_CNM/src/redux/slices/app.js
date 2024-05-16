@@ -1,9 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "../../utils/axios";
 // import S3 from "../../utils/s3";
-// import {v4} from 'uuid';
-// import S3 from "../../utils/s3";
-// import { S3_BUCKET_NAME } from "../../config";
+import {v4} from 'uuid';
+import S3 from "../../utils/s3";
+import { S3_BUCKET_NAME } from "../../config";
 // ----------------------------------------------------------------------
 
 const initialState = {
@@ -285,52 +285,52 @@ export const SendGroupMessage = ({ groupId, message }) => {
   };
 };
 
-// export const UpdateUserProfile = (formValues) => {
-//   return async (dispatch, getState) => {
-//     const file = formValues.avatar;
+export const UpdateUserProfile = (formValues) => {
+  return async (dispatch, getState) => {
+    const file = formValues.avatar;
 
-//     const key = v4();
+    const key = v4();
 
-//     try{
-//       S3.getSignedUrl(
-//         "putObject",
-//         { Bucket: S3_BUCKET_NAME, Key: key, ContentType: `image/${file.type}` },
-//         async (_err, presignedURL) => {
-//           await fetch(presignedURL, {
-//             method: "PUT",
+    try{
+      S3.getSignedUrl(
+        "putObject",
+        { Bucket: S3_BUCKET_NAME, Key: key, ContentType: `image/${file.type}` },
+        async (_err, presignedURL) => {
+          await fetch(presignedURL, {
+            method: "PUT",
   
-//             body: file,
+            body: file,
   
-//             headers: {
-//               "Content-Type": file.type,
-//             },
-//           });
-//         }
-//       );
-//     }
-//     catch(error) {
-//       console.log(error);
-//     }
+            headers: {
+              "Content-Type": file.type,
+            },
+          });
+        }
+      );
+    }
+    catch(error) {
+      console.log(error);
+    }
 
     
 
-//     axios
-//       .patch(
-//         "/user/update-me",
-//         { ...formValues, avatar: key },
-//         {
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${getState().auth.token}`,
-//           },
-//         }
-//       )
-//       .then((response) => {
-//         console.log(response);
-//         dispatch(slice.actions.updateUser({ user: response.data.data }));
-//       })
-//       .catch((err) => {
-//         console.log(err);
-//       });
-//   };
-// };
+    axios
+      .patch(
+        "/user/update-me",
+        { ...formValues, avatar: key },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getState().auth.token}`,
+          },
+        }
+      )
+      .then((response) => {
+        console.log(response);
+        dispatch(slice.actions.updateUser({ user: response.data.data }));
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+};

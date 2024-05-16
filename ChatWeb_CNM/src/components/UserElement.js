@@ -172,6 +172,8 @@ const FriendElement = ({
   missed,
   online,
   _id,
+  handleClose,
+   
 }) => {
   const theme = useTheme();
 
@@ -215,6 +217,9 @@ const FriendElement = ({
             onClick={() => {
               // start a new conversation
               socket.emit("start_conversation", { to: _id, from: user_id });
+              socket.on("start_chat", () => {
+                handleClose(); 
+              });
             }}
           >
             <Chat />

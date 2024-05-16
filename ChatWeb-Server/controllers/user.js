@@ -3,7 +3,6 @@ const catchAsync = require("../utils/catchAsync");
 const filterObj = require("../utils/filterObj");
 const FriendRequest = require("../models/friendRequest");
 
-
 exports.updateMe = catchAsync(async (req, res, next) => {
   const filteredBody = filterObj(
     req.body,
@@ -13,7 +12,16 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     "avatar"
   );
 
-  const userDoc = await User.findByIdAndUpdate(req.user._id, filteredBody);
+  // Thêm code để cập nhật avatar
+  if (req.file) {
+    filteredBody.avatar = req.file.key; // key của file đã tải lên S3
+  }
+
+  // Sử dụng `findByIdAndUpdate` với option `{ new: true }` để trả về bản ghi mới sau khi cập nhật
+  const userDoc = await User.findByIdAndUpdate(req.user._id, filteredBody, {
+    new: true,
+    runValidators: true // Chạy các validators trong schema
+  });
 
   res.status(200).json({
     status: "success",
@@ -21,7 +29,6 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     message: "User Updated successfully",
   });
 });
-
 
 exports.getUsers = catchAsync(async (req, res, next) => {
   const all_users = await User.find({
