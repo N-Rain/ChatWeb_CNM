@@ -9,6 +9,8 @@ process.on("uncaughtException", (err) => {
   console.log(err);
   process.exit(1);
 });
+const Conversation = require("./models/conversations");
+
 const User = require("./models/user");
 const FriendRequest = require("./models/friendRequest");
 
@@ -24,6 +26,66 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
+app.post("/message/messages-create", async (req, res) => {
+  try {
+    console.log(req.body);
+    const { senderId, receiverId, content, image, file } = req.body;
+    let conversation = await Conversation.findOne({
+      members: { $all: [senderId, receiverId] },
+    });
+    if (!conversation) {
+      conversation = await Conversation.create({
+        type: "public",
+        members: [senderId, receiverId],
+      });
+    }
+    const message = await Message.create({
+      conversationId: conversation._id,
+      senderId,
+      receiverId,
+      content,
+      image,
+      file,
+    });
+    io.emit("messageSend", { user: senderId });
+    return res.json(message);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+});
+app.get("/message/clearAll/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Message.deleteMany({ conversationId: id });
+    await Conversation.findByIdAndUpdate(id);
+    io.emit("messageSend", { user: id });
+    return res.status(200).json({ message: "deleted", data: true });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+app.get("/get-groupchat-idUser/:id", async (req, res) => {
+  try {
+    const data = await Conversation.find({
+      members: { $all: [req.params.id] }, // Sử dụng $all với mảng chứa id
+      type: { $ne: "public" }, // Sử dụng $ne để lọc các nhóm có type khác "public"
+    });
+    return res.json(data);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+app.post("/create-group/:id", async (req, res) => {
+  try {
+    const data = await Conversation.create({
+      members: [req.params.id],
+      type: req.body.type,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
 const DB = process.env.DBURI.replace("<PASSWORD>", process.env.DBPASSWORD);
 const multer = require("multer");
 const aws = require("aws-sdk");
@@ -34,28 +96,49 @@ const multerS3 = require("multer-s3");
 
 // Cấu hình AWS
 const s3 = new aws.S3({
+<<<<<<< HEAD
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: process.env.AWS_REGION
+=======
+  accessKeyId: "AKIAU6GD3PPUNMDIKWOS",
+  secretAccessKey: "hZ8ZXTaogJp6HzcqzSIN8i2Rgd",
+  region: "ap-south-1",
+>>>>>>> 65daf82 (finish)
 });
 
 // Cấu hình multer để tải file lên S3
 const upload = multer({
   storage: multerS3({
     s3: s3,
+<<<<<<< HEAD
     bucket: process.env.S3_BUCKET_NAME,
+=======
+    bucket: "chatwebcnm",
+>>>>>>> 65daf82 (finish)
     acl: "public-read", // Đảm bảo rằng file có thể được đọc từ công khai
     metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname });
     },
     key: function (req, file, cb) {
       cb(null, Date.now().toString()); // Khóa của file trên S3 (thay đổi tên file nếu cần)
+<<<<<<< HEAD
     }
   })
 });
 
 // Áp dụng middleware upload vào các yêu cầu PATCH /user/update-me
 
+=======
+    },
+  }),
+});
+app.post("/upload/image-s3", upload.single("image"), (req, res) => {
+  console.log(req.file);
+  res.json({ imageUrl: req.file.location });
+});
+// Áp dụng middleware upload vào các yêu cầu PATCH /user/update-me
+>>>>>>> 65daf82 (finish)
 
 mongoose
   .connect(DB)
@@ -68,10 +151,24 @@ mongoose
 const port = process.env.PORT || 8000;
 
 server.listen(port, () => {
+  io.on("connect", () => console.log("connecting to io"));
+  io.on("connection", (socket) => {
+    console.log(" user connected");
+    const userAgent = socket.handshake.headers["user-agent"];
+    console.log("ip: " + socket.request.connection.remoteAddress);
+    console.log("User Agent:", userAgent);
+    socket.on("disconnect", () => {
+      console.log("A user disconnected");
+    });
+  });
   console.log(`Web đang chạy trên cổng ${port}`);
 });
 // Import định tuyến cho tin nhắn
 const messageRoute = require("./routes/message");
+<<<<<<< HEAD
+=======
+const Message = require("./models/message");
+>>>>>>> 65daf82 (finish)
 
 // Middleware
 // app.use(express.json());
@@ -79,7 +176,10 @@ const messageRoute = require("./routes/message");
 // Sử dụng định tuyến cho tin nhắn
 app.use("/message", messageRoute);
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 65daf82 (finish)
 io.on("connection", async (socket) => {
   console.log(`User connected ${socket.id}`);
   console.log(JSON.stringify(socket.handshake.query));
@@ -249,7 +349,6 @@ io.on("connection", async (socket) => {
     )}${fileExtension}`;
   });
 
-
   socket.on("get_direct_conversations", async ({ user_id }, callback) => {
     const existing_conversations = await OneToOneMessage.find({
       participants: { $all: [user_id] },
@@ -262,10 +361,16 @@ io.on("connection", async (socket) => {
     callback(existing_conversations);
   });
 
+<<<<<<< HEAD
 
   socket.on("DELETE_MSG", (msg) => {
     socket.to(msg.receiver.socketId).emit("DELETED_MSG", msg)
   })
+=======
+  socket.on("DELETE_MSG", (msg) => {
+    socket.to(msg.receiver.socketId).emit("DELETED_MSG", msg);
+  });
+>>>>>>> 65daf82 (finish)
   socket.on("start_conversation", async (data) => {
     // data: {to: from:}
 
@@ -387,8 +492,6 @@ io.on("connection", async (socket) => {
   //     }
   //   });
 });
-
-
 
 process.on("unhandledRejection", (err) => {
   console.log(err);

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Avatar,
   Badge,
@@ -20,6 +20,7 @@ import { ToggleSidebar } from "../../redux/slices/app";
 import { useDispatch, useSelector } from "react-redux";
 import { StartAudioCall } from "../../redux/slices/audioCall";
 import { StartVideoCall } from "../../redux/slices/videoCall";
+import axios from "axios";
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   "& .MuiBadge-badge": {
@@ -69,8 +70,22 @@ const ChatHeader = () => {
   const dispatch = useDispatch();
   const isMobile = useResponsive("between", "md", "xs", "sm");
   const theme = useTheme();
+  const [dataUser, setDataUser] = useState();
 
-  const {current_conversation} = useSelector((state) => state.conversation.direct_chat);
+  useEffect(() => {
+    const idUser = localStorage.getItem("user_id-chat");
+    const fetchUser = async () => {
+      const { data } = await axios.get(
+        "http://localhost:3001/get-id-user/" + idUser
+      );
+      setDataUser(data);
+      console.log(data);
+    };
+    fetchUser();
+  }, []);
+  const { current_conversation } = useSelector(
+    (state) => state.conversation.direct_chat
+  );
 
   const [conversationMenuAnchorEl, setConversationMenuAnchorEl] =
     React.useState(null);
@@ -117,10 +132,7 @@ const ChatHeader = () => {
                 }}
                 variant="dot"
               >
-                <Avatar
-                  alt={current_conversation?.name}
-                  src={current_conversation?.img}
-                />
+                <Avatar alt={dataUser?.avatar} src={dataUser?.avatar} />
               </StyledBadge>
             </Box>
             <Stack spacing={0.2}>
@@ -135,14 +147,15 @@ const ChatHeader = () => {
             alignItems="center"
             spacing={isMobile ? 1 : 3}
           >
-            <IconButton onClick={() => {
-              dispatch(StartVideoCall(current_conversation.user_id));
-            }}>
+            <IconButton
+              onClick={() => {
+                dispatch(StartVideoCall(current_conversation.user_id));
+              }}
+            >
               <VideoCamera />
             </IconButton>
             <IconButton
               onClick={() => {
-                
                 dispatch(StartAudioCall(current_conversation.user_id));
               }}
             >
@@ -206,8 +219,6 @@ const ChatHeader = () => {
           </Stack>
         </Stack>
       </Box>
-
-      
     </>
   );
 };

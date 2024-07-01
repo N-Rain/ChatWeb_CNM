@@ -1,4 +1,17 @@
+<<<<<<< HEAD
 import { Box, Button, Stack, Menu, MenuItem, Avatar, Typography,Fade } from "@mui/material";
+=======
+import {
+  Box,
+  Button,
+  Stack,
+  Menu,
+  MenuItem,
+  Avatar,
+  Typography,
+  Fade,
+} from "@mui/material";
+>>>>>>> 65daf82 (finish)
 import { useTheme } from "@mui/material/styles";
 import React, { useState } from "react";
 import { SignOut } from "phosphor-react";
@@ -8,10 +21,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { LogoutUser } from "../../redux/slices/auth";
 import { socket } from "../../socket";
 import { faker } from "@faker-js/faker";
+<<<<<<< HEAD
 import {
   User,
   Gear,
 } from "phosphor-react";
+=======
+import { User, Gear } from "phosphor-react";
+>>>>>>> 65daf82 (finish)
 import { UpdateTab } from "../../redux/slices/app";
 
 const getPath = (index) => {
@@ -28,6 +45,8 @@ const getPath = (index) => {
 };
 const SideBar = () => {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.app);
+
   const theme = useTheme();
   const [selected, setSelected] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -47,7 +66,11 @@ const SideBar = () => {
   };
 
   const user_id = window.localStorage.getItem("user_id");
+<<<<<<< HEAD
   const openMenu = Boolean(anchorEl);  
+=======
+  const openMenu = Boolean(anchorEl);
+>>>>>>> 65daf82 (finish)
   return (
     <Box
       paddingTop={2}
@@ -66,7 +89,7 @@ const SideBar = () => {
       >
         <Stack direction="column" alignItems="center" spacing={4}>
           <Avatar
-            src={faker.image.avatar()}
+            src={user.avatar}
             alt={"Avatar"}
             id="basic-button"
             aria-controls={open ? "basic-menu" : undefined}
@@ -74,6 +97,7 @@ const SideBar = () => {
             aria-expanded={open ? "true" : undefined}
             onClick={handleClick}
           />
+<<<<<<< HEAD
                  <Menu
         MenuListProps={{
           "aria-labelledby": "fade-button",
@@ -125,6 +149,57 @@ const SideBar = () => {
       </Menu>
           
 <Stack spacing={0}>
+=======
+          <Menu
+            MenuListProps={{
+              "aria-labelledby": "fade-button",
+            }}
+            TransitionComponent={Fade}
+            id="profile-positioned-menu"
+            aria-labelledby="profile-positioned-button"
+            anchorEl={anchorEl}
+            open={openMenu}
+            onClose={handleClose}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "right",
+            }}
+            transformOrigin={{
+              vertical: "bottom",
+              horizontal: "left",
+            }}
+          >
+            <Box p={1}>
+              <Stack spacing={1} px={1}>
+                {Profile_Menu.map((el, idx) => (
+                  <MenuItem onClick={handleClose}>
+                    <Stack
+                      onClick={() => {
+                        if (idx === 0) {
+                          navigate("/profile");
+                        } else if (idx === 1) {
+                          navigate("/settings");
+                        } else {
+                          dispatch(LogoutUser());
+                          socket.emit("end", { user_id });
+                        }
+                      }}
+                      sx={{ width: 100 }}
+                      direction="row"
+                      alignItems={"center"}
+                      justifyContent="space-between"
+                    >
+                      <span>{el.title}</span>
+                      {el.icon}
+                    </Stack>{" "}
+                  </MenuItem>
+                ))}
+              </Stack>
+            </Box>
+          </Menu>
+
+          <Stack spacing={0}>
+>>>>>>> 65daf82 (finish)
             {Nav_Buttons.map((el) =>
               el.index === selectedTab ? (
                 <Box
@@ -163,10 +238,7 @@ const SideBar = () => {
                 width: "100%",
               }}
             >
-              <Button
-                
-                sx={{ width: 65, height: 65, color: "#fff" }}
-              >
+              <Button sx={{ width: 65, height: 65, color: "#fff" }}>
                 <SignOut size={28} color="#ffffff" weight="bold" />
               </Button>
             </Box>
@@ -179,7 +251,6 @@ const SideBar = () => {
                   navigate("/auth/login"); // Redirect sau khi logout
                 });
               }}
-             
               sx={{ width: 65, height: 65, color: "#fff" }}
               component={RouterLink}
               to="/auth/login"

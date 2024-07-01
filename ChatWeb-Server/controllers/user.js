@@ -63,7 +63,7 @@ exports.getRequests = catchAsync(async (req, res, next) => {
 exports.getFriends = catchAsync(async (req, res, next) => {
   console.log("Request to get friends received");
 
-  const this_user = await User.findById(req.user._id).populate(
+  const this_user = await User.findById(req.params.id).populate(
     "friends",
     "_id firstName lastName"
   );

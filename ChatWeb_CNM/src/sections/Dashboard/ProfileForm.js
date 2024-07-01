@@ -15,7 +15,12 @@ const ProfileForm = () => {
   const dispatch = useDispatch();
   const [file, setFile] = useState();
   const { user } = useSelector((state) => state.app);
+<<<<<<< HEAD
 
+=======
+  console.log(user, "ok user");
+  const [avatar, setAvatar] = useState();
+>>>>>>> 65daf82 (finish)
   const ProfileSchema = Yup.object().shape({
     firstName: Yup.string().required("Name is required"),
     about: Yup.string().required("About is required"),
@@ -52,7 +57,11 @@ const ProfileForm = () => {
         UpdateUserProfile({
           firstName: data?.firstName,
           about: data?.about,
+<<<<<<< HEAD
           avatar: file,
+=======
+          avatar: avatar,
+>>>>>>> 65daf82 (finish)
         })
       );
     } catch (error) {
@@ -60,6 +69,7 @@ const ProfileForm = () => {
     }
   };
 
+<<<<<<< HEAD
   const handleDrop = useCallback(
     (acceptedFiles) => {
       const file = acceptedFiles[0];
@@ -76,10 +86,43 @@ const ProfileForm = () => {
     },
     [setValue]
   );
+=======
+  const handleDrop = useCallback(async (acceptedFiles) => {
+    const file = acceptedFiles[0];
+    setFile(file);
+
+    const newFile = Object.assign(file, {
+      preview: URL.createObjectURL(file),
+    });
+
+    if (file) {
+      const formData = new FormData();
+      formData.append("img", file);
+      try {
+        const response = await fetch("http://localhost:4000/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        setAvatar(data.location);
+        console.log("Image uploaded successfully:", data);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      }
+    }
+  }, []);
+>>>>>>> 65daf82 (finish)
 
   return (
     <FormProvider methods={methods} onSubmit={handleSubmit(onSubmit)}>
       <Stack spacing={4}>
+<<<<<<< HEAD
+=======
+        <img src={user.avatar} className="!w-[100px] !rounded-[100%]" />
+>>>>>>> 65daf82 (finish)
         <RHFUploadAvatar name="avatar" maxSize={3145728} onDrop={handleDrop} />
 
         <RHFTextField
@@ -91,7 +134,11 @@ const ProfileForm = () => {
 
         <Stack direction={"row"} justifyContent="end">
           <LoadingButton
+<<<<<<< HEAD
             sx={{ backgroundColor: '#000000', color: 'pink' }}
+=======
+            sx={{ backgroundColor: "#000000", color: "pink" }}
+>>>>>>> 65daf82 (finish)
             size="large"
             type="submit"
             variant="contained"
@@ -105,4 +152,8 @@ const ProfileForm = () => {
   );
 };
 
+<<<<<<< HEAD
 export default ProfileForm;
+=======
+export default ProfileForm;
+>>>>>>> 65daf82 (finish)

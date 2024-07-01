@@ -8,7 +8,11 @@ const authController = require("../controllers/auth");
 // router.get("/get-users", authController.protect, userController.getUsers);
 router.get("/get-users", authController.protect, userController.getUsers);
 router.get("/get-requests", authController.protect, userController.getRequests);
+<<<<<<< HEAD
 router.get("/get-friends", authController.protect, userController.getFriends);
+=======
+router.get("/get-friends/:id", userController.getFriends);
+>>>>>>> 65daf82 (finish)
 router.patch(
   "/update-me",
   authController.protect,

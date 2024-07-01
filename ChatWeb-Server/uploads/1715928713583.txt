@@ -1,0 +1,159 @@
+api signin 
+
+post -- /api/signin
+
+{
+"email:""
+"password":""
+}
+
+api signup 
+
+post -- /api/signup
+
+{
+"name:""
+"email:""
+"password":""
+"confirmPassword":""
+}
+
+
+api getall user
+
+get -- /api/getall-user
+
+
+api get-id user
+
+get -- /api/get-user/:id
+
+
+body create room 
+post --   /api/create-room
+
+{
+    "name":"room 1",
+    "desc":"desc 1",
+    "type":"Normal",
+    "image":[
+        {"url":"image1.png"},
+        {"url":"image2.png"},
+        {"url":"image3.png"}
+    ],
+    "countPeople":10,
+    "price":9999,
+    "active":"Active"
+}
+
+api get all room 
+
+get -- /api/getall-room
+
+api get id room
+
+get -- /api/get-id-room/id
+
+api delete room
+
+delete -- /api/delete-room/id
+
+api update room
+
+put -- /api/edit-room/id
+
+{
+    "name":"room 2",
+    "desc":"desc 2",
+    "type":"Vip",
+    "image":[
+        {"url":"image11.png"},
+        {"url":"image22.png"},
+        {"url":"image33.png"}
+    ],
+    "countPeople":5,
+    "price":2222,
+    "active":"Active"
+}
+
+
+api evaluate room
+
+post --/api/evaluate-room/id
+{
+    "star":2,
+    "content":"No Ok",
+    "idUser":"663c3065834c210670e2fa46",
+    "image":[
+        {
+            "url":"imag7.img"
+        }
+    ]
+    
+}
+
+
+api remove evaluate room
+
+post --  /api/remove-evaluate-room/id?idEvalue=
+
+
+api edit evalute room
+
+post --  /api/edit-evaluate-room/id
+
+{
+    "idEvalue":"663c85db434f2b28acb5f3bb",
+    "content":"ok ma",
+    "star" : 4,
+    "image":[]
+}
+
+
+
+
+
+order
+
+api create order
+
+post -- /api/create-order/idroom
+
+{
+    "userId": "663c8f7afb8a67774cef0eaa",
+    "price": 150000,
+    "noteBooking": "This is a test booking",
+    "room": {
+        "idRoom": "room456", 
+        "people": 4,
+        "startDate": "2024-05-15T00:00:00Z",
+        "endDate": "2024-05-20T00:00:00Z"
+    }
+}
+
+
+api get all order 
+
+get -- /api/getall-order
+
+api get id order 
+
+get -- /api/get-id-order/id
+
+
+api get order cuar user 
+
+get -- /api/get-order-user/id user
+
+
+api payment cash 
+
+post -- /api/payment-cash/:idorder
+
+
+
+{
+    "status":"PAYED",
+    "typePayment":"CASH"
+}
+

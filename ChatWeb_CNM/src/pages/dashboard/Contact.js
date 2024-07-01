@@ -1,5 +1,5 @@
 import { useTheme } from "@mui/material/styles";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Stack,
@@ -9,6 +9,7 @@ import {
   Badge,
   Avatar,
   IconButton,
+  TextField,
 } from "@mui/material";
 import {
   User,
@@ -24,6 +25,8 @@ import { faker } from "@faker-js/faker";
 import { ChatList } from "../../data";
 import { SimpleBarStyle } from "../../components/Scrollbar";
 import DeleteIcon from "@mui/icons-material/Delete";
+import axios from "axios";
+import { useSelector } from "react-redux";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -101,6 +104,7 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
     },
   },
 }));
+
 // danh sách bạn bè
 const ContactElement = ({ id, name, img }) => {
   return (
@@ -142,6 +146,32 @@ const ContactElement = ({ id, name, img }) => {
 };
 
 const Contact = () => {
+  const { user_id } = useSelector((state) => state.auth);
+
+  const [frient, setFrient] = useState();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredFriends, setFilteredFriends] = useState([]);
+  const handelGetFrientUser = async () => {
+    const { data } = await axios.get(
+      "http://localhost:3001/user/get-friends/" + user_id
+    );
+    setFrient(data.data);
+    setFilteredFriends(data.data);
+  };
+  const handleSearchChange = (event) => {
+    const value = event.target.value.toLowerCase();
+    setSearchTerm(value);
+    const filtered = frient.filter((friend) =>
+      `${friend.firstName.toLowerCase()} ${friend.lastName.toLowerCase()}`.includes(
+        value
+      )
+    );
+    setFilteredFriends(filtered);
+  };
+  useEffect(() => {
+    handelGetFrientUser();
+  }, [user_id]);
+  console.log(frient);
   const theme = useTheme();
 
   const UsersList = () => {
@@ -326,7 +356,9 @@ const Contact = () => {
             >
               (8)
             </Typography>
+            <br></br>
           </Stack>
+
           {/* content */}
           <Box
             sx={{
@@ -339,10 +371,19 @@ const Contact = () => {
               mx: 2,
             }}
           >
+            <form className="mb-5 mt-1">
+              <TextField
+                value={searchTerm}
+                onChange={handleSearchChange}
+                fullWidth
+                label="enter your name!"
+                id="fullWidth"
+              />
+            </form>
             {/* list friends */}
             {selectedIndex === 0 && (
               <>
-                {ChatList.map((el, index) => (
+                {filteredFriends?.map((el, index) => (
                   <Stack
                     key={index}
                     sx={{
@@ -352,7 +393,62 @@ const Contact = () => {
                       mx: 2,
                     }}
                   >
-                    <ContactElement {...el} />
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: 60,
+                        backgroundColor: "white",
+                      }}
+                      p={2}
+                    >
+                      <Stack
+                        direction={"row"}
+                        alignItems={"center"}
+                        justifyContent={"space-between"}
+                      >
+                        <Stack
+                          direction={"row"}
+                          alignItems={"center"}
+                          spacing={2}
+                        >
+                          <StyledBadge
+                            overlap="circular"
+                            anchorOrigin={{
+                              vertical: "bottom",
+                              horizontal: "right",
+                            }}
+                            // variant="dot"
+                          >
+                            <Avatar
+                              src={faker.image.avatar()}
+                              sx={{ width: 45, height: 45 }}
+                            />
+                          </StyledBadge>
+                          <Stack>
+                            <Typography variant="subtitle2" fontSize={18}>
+                              {el.firstName} {el.lastName}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                        <Stack>
+                          <IconButton edge="end" aria-label="delete">
+                            <DeleteIcon
+                              onClick={async () => {
+                                await axios.post(
+                                  "http://localhost:3001/remove-friend/" +
+                                    user_id +
+                                    "?idFriend=" +
+                                    el._id
+                                );
+                                alert("Delete success!");
+                                handelGetFrientUser();
+                              }}
+                              sx={{ color: "#FF0D86" }}
+                            />
+                          </IconButton>
+                        </Stack>
+                      </Stack>
+                    </Box>
                   </Stack>
                 ))}
               </>

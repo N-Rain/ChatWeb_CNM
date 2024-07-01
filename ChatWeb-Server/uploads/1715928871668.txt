@@ -1,0 +1,23 @@
+- Tạo 2 bảng: 1 bảng cha và 1 bảng con.  (Theo mối quan hệ one-to-many)
+Bảng cha là các cột bên trái và bên phải khoảng của các cột bôi màu vàng. Bảng con là khoảng màu vàng
+- Import dữ liệu từ file excel và lưu vào csdl
+Trong quá trình import xử lý c) xử lý chỉ lưu giá trị số, bỏ đi phần text thừaác case ví dụ:
+
++ Cột Q (Sản lượng
+
++ Cột T (Ngày/Tháng/Năm) xử lý nếu đọc không có dữ liệu thì mặc định gán bằng ngày hiện tại
+
++ Cột V và cột W: Hiện tại đang không có dữ liệu. Nhưng khi import vào db thì sẽ phải check giá trị đo thực thế
+ở cột U và Loại hình ở cột S. 
+Cụ thể: 
+# Nếu cột S không có ký tự ✓ thì các giá trị đo thực tế nằm trong khoảng Min Max (Cột K, Cột L) thì sẽ có trạng thái OK, ngoài khoảng sẽ NG. 
+# Ngược lại nếu cột S có ký tự ✓ thì các giá trị đo thực tế nằm ngoài khoảng Min Max (Cột K, Cột L)thì sẽ có trạng thái OK, trong khoảng sẽ NG.
+Thể hiện trạng thái OK hay NG bằng ký tự ✓ vào ô tương ứng (cột V và W)
+
+_ Tạo chức năng filter lọc dữ liệu theo :
++ Hạng mục quản lý (Tạo input field để gõ tìm kiếm tương đối khi key down)
++ Tên đồ gá (Tạo trường Dropdown để tìm kiếm với những giá trị bên trong là duy nhất ko được lặp lại)
++ Mã sản phẩm (Tạo trường Dropdown để tìm kiếm với những giá trị bên trong là duy nhất ko được lặp lại, với những bản ghi có nhiều mã ngăn cách nhau bằng dấu phẩy
+thì split ký tự "," để đưa thành từng option trong select).
+
+_ Tạo chức năng Export dữ liệu ngược lại ra excel theo template có sẵn.q

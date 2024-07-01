@@ -1,12 +1,6 @@
 import React from "react";
 import { useTheme } from "@mui/material/styles";
-import {
-  Stack,
-  Typography,
-  Badge,
-  Avatar,
-  Box,
-} from "@mui/material";
+import { Stack, Typography, Badge, Avatar, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useDispatch, useSelector } from "react-redux";
 import { SelectConversation } from "../../redux/slices/app";
@@ -46,12 +40,13 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
     },
   },
 }));
-const GroupElement = ({ img, name, msg, time, unread, online, id }) => {
+const GroupElement = ({ chat }) => {
+  console.log(chat, "chay");
   const dispatch = useDispatch();
   const { room_id } = useSelector((state) => state.app);
   const selectedChatId = room_id?.toString();
-
-  let isSelected = +selectedChatId === id;
+  const online = true;
+  let isSelected = +selectedChatId === chat._id;
 
   if (!selectedChatId) {
     isSelected = false;
@@ -62,14 +57,12 @@ const GroupElement = ({ img, name, msg, time, unread, online, id }) => {
   return (
     <StyledChatBox
       onClick={() => {
-        console.log("Chat box clicked:", id);
-        dispatch(SelectConversation({ room_id: id }));
+        console.log("Chat box clicked:", chat._id);
+        dispatch(SelectConversation({ room_id: chat._id }));
       }}
       sx={{
         width: "100%",
-
         borderRadius: 1,
-
         backgroundColor: isSelected
           ? theme.palette.primary.pink // Change the background color to pink when isSelected is true
           : theme.palette.mode === "light"
@@ -91,24 +84,26 @@ const GroupElement = ({ img, name, msg, time, unread, online, id }) => {
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               variant="dot"
             >
-              <Avatar alt={name} src={img} />
+              <Avatar alt={""} src={"img"} />
             </StyledBadge>
           ) : (
-            <Avatar alt={name} src={img} />
+            <Avatar alt={""} src={"img"} />
           )}
           <Stack spacing={0.3}>
-            <Typography variant="subtitle2">{name}</Typography>
-            <Typography variant="caption">{truncateText(msg, 20)}</Typography>
+            <Typography variant="subtitle2">{chat?.type}</Typography>
+            <Typography variant="caption">
+              {truncateText(chat?.type, 20)}
+            </Typography>
           </Stack>
         </Stack>
         <Stack spacing={2} alignItems={"center"}>
           <Typography sx={{ fontWeight: 600 }} variant="caption">
-            {time}
+            {"time"}
           </Typography>
           <Badge
             className="unread-count"
             color="primary"
-            badgeContent={unread}
+            badgeContent={"unread"}
           />
         </Stack>
       </Stack>

@@ -20,8 +20,13 @@ import Friends from "../../sections/Dashboard/Friends";
 import { useDispatch, useSelector } from "react-redux";
 import { SelectConversation } from "../../redux/slices/app";
 import { socket } from "../../socket";
-import { FetchDirectConversations, FetchGroupConversations } from "../../redux/slices/conversation";
+import {
+  FetchDirectConversations,
+  FetchGroupConversations,
+} from "../../redux/slices/conversation";
 import GroupElement from "./GroupElement";
+import { createSearchParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const truncateText = (string, n) => {
   return string?.length > n ? `${string?.slice(0, n)}...` : string;
@@ -106,9 +111,11 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
     },
   },
 }));
-const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
+const ChatElement = ({ img, name, msg, time, unread, online, id, user_id }) => {
+  console.log(user_id, "user_id");
   const dispatch = useDispatch();
   const { room_id } = useSelector((state) => state.app);
+  const navigate = useNavigate();
   const selectedChatId = room_id?.toString();
 
   let isSelected = +selectedChatId === id;
@@ -116,16 +123,37 @@ const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
   if (!selectedChatId) {
     isSelected = false;
   }
+  const [dataUser, setDataUser] = useState();
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data } = await axios.get(
+        "http://localhost:3001/get-id-user/" + user_id
+      );
+      setDataUser(data);
+      console.log(data);
+    };
+    fetchUser();
+  }, []);
   const theme = useTheme();
 
   return (
     <StyledChatBox
       onClick={() => {
-        console.log("Chat box clicked:", id);
+        console.log("Chat box clicked:", user_id);
         dispatch(SelectConversation({ room_id: id }));
         window.location.reload();
+<<<<<<< HEAD
       }}  
+=======
+        navigate({
+          search: createSearchParams({
+            idUser: user_id,
+          }).toString(),
+        });
+        localStorage.setItem("user_id-chat", user_id);
+      }}
+>>>>>>> 65daf82 (finish)
       sx={{
         width: "100%",
 
@@ -134,8 +162,8 @@ const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
         backgroundColor: isSelected
           ? theme.palette.primary.pink // Change the background color to pink when isSelected is true
           : theme.palette.mode === "light"
-            ? "#fff"
-            : theme.palette.background.paper,
+          ? "#fff"
+          : theme.palette.background.paper,
       }}
       p={2}
     >
@@ -152,10 +180,10 @@ const ChatElement = ({ img, name, msg, time, unread, online, id }) => {
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               variant="dot"
             >
-              <Avatar alt={name} src={img} />
+              <Avatar alt={name} src={dataUser?.avatar} />
             </StyledBadge>
           ) : (
-            <Avatar alt={name} src={img} />
+            <Avatar alt={name} src={dataUser?.avatar} />
           )}
           <Stack spacing={0.3}>
             <Typography variant="subtitle2">{name}</Typography>
@@ -186,7 +214,16 @@ const Chats = () => {
   const { conversationsGroup } = useSelector(
     (state) => state.conversation.group_chat
   );
-
+  const [groupChat, setGroupChats] = useState([]);
+  useEffect(() => {
+    const fetchGroupChat = async () => {
+      const { data } = await axios.get(
+        "http://localhost:3001/get-groupchat-idUser/" + user_id
+      );
+      setGroupChats(data);
+    };
+    fetchGroupChat();
+  }, [user_id]);
   const dispatch = useDispatch();
   useEffect(() => {
     socket.emit("get_direct_conversations", { user_id }, (data) => {
@@ -201,7 +238,7 @@ const Chats = () => {
 
       dispatch(FetchGroupConversations({ conversationsGroup: data }));
     });
-    // 
+    //
   }, []);
   const [openCreateGroup, setOpenCreateGroup] = useState(false);
   const handleCloseCreateGroup = () => {
@@ -367,6 +404,7 @@ const Chats = () => {
                   return (
                     <Stack spacing={2.4} sx={{ height: "100%" }}>
                       {conversations.map((el) => {
+                        console.log(el, "elelected");
                         return <ChatElement {...el} />;
                       })}
                     </Stack>
@@ -385,10 +423,10 @@ const Chats = () => {
                   //grchat
                   return (
                     <Stack spacing={2.4} sx={{ height: "100%" }}>
-                      {conversationsGroup.map((chat) => (
-                        <GroupElement
-                        />
-                      ))}
+                      {groupChat.map((chat) => {
+                        console.log(chat);
+                        return <GroupElement chat={chat} />;
+                      })}
                     </Stack>
                   );
 

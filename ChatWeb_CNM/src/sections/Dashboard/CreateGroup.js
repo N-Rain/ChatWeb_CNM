@@ -1,11 +1,18 @@
-import React, { useEffect } from 'react';
-import { Button, Dialog, DialogContent, DialogTitle, Slide, Stack } from '@mui/material';
+import React, { useEffect } from "react";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Slide,
+  Stack,
+} from "@mui/material";
 import * as Yup from "yup";
-import { yupResolver } from '@hookform/resolvers/yup';
+import { yupResolver } from "@hookform/resolvers/yup";
 import FormProvider from "../../components/hook-form/FormProvider";
-import { RHFTextField } from '../../components/hook-form';
-import { useForm } from 'react-hook-form';
-import RHFAutocomplete from '../../components/hook-form/RHFAutocomplete';
+import { RHFTextField } from "../../components/hook-form";
+import { useForm } from "react-hook-form";
+import RHFAutocomplete from "../../components/hook-form/RHFAutocomplete";
 import { useDispatch, useSelector } from "react-redux";
 import {
   FetchFriendRequests,
@@ -24,15 +31,15 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const CreateGroupForm = ({ handleClose }) => {
   const NewGroupSchema = Yup.object().shape({
     title: Yup.string().required("Tên nhóm"),
-    members: Yup.array().min(2, "Phải ít nhất 2 thành viên"),
+    // members: Yup.string(),
   });
   const defaultValues = {
     title: "",
     members: [],
-  }
+  };
   const methods = useForm({
     resolver: yupResolver(NewGroupSchema),
-    defaultValues
+    defaultValues,
   });
   const {
     reset,
@@ -40,8 +47,7 @@ const CreateGroupForm = ({ handleClose }) => {
     setError,
     handleSubmit,
     setValue,
-    formState: {
-      errors, isSubmitting, isSubmitSuccessfull, isValid },
+    formState: { errors, isSubmitting, isSubmitSuccessfull, isValid },
   } = methods;
 
   const { friends } = useSelector((state) => state.app);
@@ -52,10 +58,8 @@ const CreateGroupForm = ({ handleClose }) => {
   useEffect(() => {
     dispatch(FetchFriends());
 
-    socket.on("request_accepted", function() {
-
+    socket.on("request_accepted", function () {
       setTimeout(() => {
-
         dispatch(FetchFriends());
       }, 500);
     });
@@ -63,30 +67,26 @@ const CreateGroupForm = ({ handleClose }) => {
 
   const onSubmit = async (data) => {
     try {
-      console.log("DATA", data)
+      console.log("DATA", data);
       // Gửi yêu cầu tạo nhóm chat đến server
-      socket.emit("start_conversation_group", data);
+      // socket.emit("start_conversation_group", data);
       handleClose();
+    } catch (error) {
+      console.log("error", error);
     }
-    catch (error) {
-      console.log("error", error)
-    }
-  }
+  };
   return (
     <FormProvider methods={methods} onSubmit={handleSubmit(onSubmit)}>
-      <Stack spacing={3} >
+      <Stack spacing={3}>
         <RHFTextField name="title" label="Tên nhóm" />
-        <RHFAutocomplete name="members" label="Members" multiple
+        {/* <RHFAutocomplete
+          name="members"
+          label="Members"
+          multiple
           freeSolo
-          getOptionLabel = {(option) => {
-
-            const { 
-
-              firstName,
-              lastName,
-            } = option;
+          getOptionLabel={(option) => {
+            const { firstName, lastName } = option;
             const name = `${firstName} ${lastName}`;
-
             return name;
           }}
           // onChange={(e, value) => {
@@ -94,27 +94,51 @@ const CreateGroupForm = ({ handleClose }) => {
           //   setValue("members", value);
           // }}
           // value={members}
-          options={friends} ChipProps={{ size: "medium", style: { backgroundColor: "#ffb4d8" } }} />
-        <Stack spacing={2} direction="row" alignItems={"center"} justifyContent="end">
-          <Button onClick={handleClose} style={{ backgroundColor: '#ffb4d8', color: '#000' }}>Cancel</Button>
-          <Button type="submit" variant="contained" style={{ backgroundColor: '#ffb4d8', color: '#000' }} disabled={isSubmitting}>
+          options={friends}
+          ChipProps={{ size: "medium", style: { backgroundColor: "#ffb4d8" } }}
+        /> */}
+        <Stack
+          spacing={2}
+          direction="row"
+          alignItems={"center"}
+          justifyContent="end"
+        >
+          <Button
+            onClick={handleClose}
+            style={{ backgroundColor: "#ffb4d8", color: "#000" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            style={{ backgroundColor: "#ffb4d8", color: "#000" }}
+            disabled={isSubmitting}
+          >
             {/* Create */}
             {isSubmitting ? "Creating..." : "Create"}
           </Button>
         </Stack>
       </Stack>
     </FormProvider>
-  )
-}
+  );
+};
 
 const CreateGroup = ({ open, handleClose }) => {
   return (
-    <Dialog fullWidth maxWidth="xs" open={open} TransitionComponent={Transition} keepMounted sx={{ p: 4 }}
+    <Dialog
+      fullWidth
+      maxWidth="xs"
+      open={open}
+      TransitionComponent={Transition}
+      keepMounted
+      sx={{ p: 4 }}
       PaperProps={{
         style: {
-          backgroundColor: 'white',
+          backgroundColor: "white",
         },
-      }}>
+      }}
+    >
       {/* title */}
       <DialogTitle sx={{ mb: 3 }}>Tạo nhóm</DialogTitle>
       {/* Content */}
@@ -122,8 +146,7 @@ const CreateGroup = ({ open, handleClose }) => {
         {/* form */}
         <CreateGroupForm handleClose={handleClose} />
       </DialogContent>
-
     </Dialog>
-  )
-}
+  );
+};
 export default CreateGroup;

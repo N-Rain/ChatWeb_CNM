@@ -299,7 +299,9 @@ import useResponsive from "../../hooks/useResponsive";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { socket } from "../../socket";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import { dispatchFetchMessage } from "../../redux/slices/app";
 
 const StyledInput = styled(TextField)(({ theme }) => ({
   "& .MuiInputBase-input": {
@@ -310,6 +312,7 @@ const StyledInput = styled(TextField)(({ theme }) => ({
 
 const Actions = [
   {
+    id: 9,
     color: "#4da5fe",
     icon: <Image size={24} />,
     y: 102,
@@ -328,6 +331,7 @@ const Actions = [
     title: "Image",
   },
   {
+    id: 10,
     color: "#0159b2",
     icon: <File size={24} />,
     y: 312,
@@ -347,74 +351,151 @@ const ChatInput = ({
   setValue,
   value,
   inputRef,
+  getImage,
+  getFile,
+  handelResetValue,
 }) => {
   const [openActions, setOpenActions] = React.useState(false);
+  const fileInputRef = useRef(null);
+  const fileInputRef2 = useRef(null);
 
+  // getFile
+  const handleFileUploadClick = () => {
+    fileInputRef.current.click();
+  };
+  const handleFileUploadClick2 = () => {
+    fileInputRef2.current.click();
+  };
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        const formData = new FormData();
+        formData.append("img", file);
+        const response = await fetch("http://localhost:4000/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        getImage(data.location);
+        console.log("Image uploaded successfully:", data);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      }
+    }
+  };
+
+  const handleFileChange2 = async (event) => {
+    const file = event.target.files[0];
+
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const response = await fetch("http://localhost:3001/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (response.ok) {
+          const result = await response.json();
+          console.log(result, "upload");
+          getFile(result.file);
+        } else {
+          console.error("File upload failed:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error uploading file:", error);
+      }
+    }
+  };
   return (
-    <StyledInput
-      inputRef={inputRef}
-      value={value}
-      onChange={(event) => {
-        setValue(event.target.value);
-      }}
-      fullWidth
-      placeholder="Write a message..."
-      variant="filled"
-      InputProps={{
-        disableUnderline: true,
-        startAdornment: (
-          <Stack sx={{ width: "max-content" }}>
-            <Stack
-              sx={{
-                position: "relative",
-                display: openActions ? "inline-block" : "none",
-              }}
-            >
-              {Actions.map((el) => (
-                <Tooltip placement="right" title={el.title}>
-                  <Fab
-                    onClick={() => {
-                      setOpenActions(!openActions);
-                    }}
-                    sx={{
-                      position: "absolute",
-                      top: -el.y,
-                      backgroundColor: el.color,
-                    }}
-                    aria-label="add"
-                  >
-                    {el.icon}
-                  </Fab>
-                </Tooltip>
-              ))}
-            </Stack>
+    <>
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
+      <input
+        type="file"
+        ref={fileInputRef2}
+        style={{ display: "none" }}
+        onChange={handleFileChange2}
+      />
+      <StyledInput
+        inputRef={inputRef}
+        value={value}
+        onChange={(event) => {
+          setValue(event.target.value);
+        }}
+        fullWidth
+        placeholder="Write a message..."
+        variant="filled"
+        InputProps={{
+          disableUnderline: true,
+          startAdornment: (
+            <Stack sx={{ width: "max-content" }}>
+              <Stack
+                sx={{
+                  position: "relative",
+                  display: openActions ? "inline-block" : "none",
+                }}
+              >
+                {Actions.map((el) => (
+                  <Tooltip placement="right" title={el.title}>
+                    <Fab
+                      onClick={() => {
+                        if (el.id == 9) {
+                          handleFileUploadClick();
+                        }
+                        if (el.id == 10) {
+                          handleFileUploadClick2();
+                        }
+                        // setOpenActions(!openActions);
+                      }}
+                      sx={{
+                        position: "absolute",
+                        top: -el.y,
+                        backgroundColor: el.color,
+                      }}
+                      aria-label="add"
+                    >
+                      {el.icon}
+                    </Fab>
+                  </Tooltip>
+                ))}
+              </Stack>
 
-            <InputAdornment>
-              <IconButton
-                onClick={() => {
-                  setOpenActions(!openActions);
-                }}
-              >
-                <LinkSimple />
-              </IconButton>
-            </InputAdornment>
-          </Stack>
-        ),
-        endAdornment: (
-          <Stack sx={{ position: "relative" }}>
-            <InputAdornment>
-              <IconButton
-                onClick={() => {
-                  setOpenPicker(!openPicker);
-                }}
-              >
-                <Smiley />
-              </IconButton>
-            </InputAdornment>
-          </Stack>
-        ),
-      }}
-    />
+              <InputAdornment>
+                <IconButton
+                  onClick={() => {
+                    setOpenActions(!openActions);
+                  }}
+                >
+                  <LinkSimple />
+                </IconButton>
+              </InputAdornment>
+            </Stack>
+          ),
+          endAdornment: (
+            <Stack sx={{ position: "relative" }}>
+              <InputAdornment>
+                <IconButton
+                  onClick={() => {
+                    setOpenPicker(!openPicker);
+                  }}
+                >
+                  <Smiley />
+                </IconButton>
+              </InputAdornment>
+            </Stack>
+          ),
+        }}
+      />
+    </>
   );
 };
 
@@ -433,12 +514,23 @@ function containsUrl(text) {
 
 const Footer = () => {
   const theme = useTheme();
-
+  const dispatch = useDispatch();
   const { current_conversation } = useSelector(
     (state) => state.conversation.direct_chat
   );
+  const [dataMessage, setDataMessage] = useState();
+  const [dataFile, setDataFile] = useState();
 
+  const getImage = (data) => {
+    setDataMessage(data);
+  };
+  const getFile = (data) => {
+    console.log(data);
+    setDataFile(data);
+  };
+  console.log(dataFile, "dataFile");
   const user_id = window.localStorage.getItem("user_id");
+  const receiverId = window.localStorage.getItem("user_id-chat");
 
   const isMobile = useResponsive("between", "md", "xs", "sm");
 
@@ -448,7 +540,9 @@ const Footer = () => {
 
   const [value, setValue] = useState("");
   const inputRef = useRef(null);
-
+  const handelResetValue = () => {
+    setValue("");
+  };
   function handleEmojiClick(emoji) {
     const input = inputRef.current;
 
@@ -511,8 +605,15 @@ const Footer = () => {
               setValue={setValue}
               openPicker={openPicker}
               setOpenPicker={setOpenPicker}
+              getImage={getImage}
+              getFile={getFile}
+              handelResetValue={handelResetValue}
             />
           </Stack>
+          {dataMessage && (
+            <img className="!w-[80px]" src={dataMessage} alt="ok" />
+          )}
+          {dataFile && <p>{dataFile}</p>}
           <Box
             sx={{
               height: 48,
@@ -527,14 +628,29 @@ const Footer = () => {
               justifyContent="center"
             >
               <IconButton
-                onClick={() => {
-                  socket.emit("text_message", {
-                    message: linkify(value),
-                    conversation_id: room_id,
-                    from: user_id,
-                    to: current_conversation.user_id,
-                    type: containsUrl(value) ? "Link" : "Text",
-                  });
+                onClick={async () => {
+                  const dataPost = {
+                    senderId: user_id,
+                    receiverId: receiverId,
+                    content: linkify(value),
+                    image: dataMessage,
+                    file: dataFile,
+                  };
+                  await axios.post(
+                    "http://localhost:3001/message/messages-create",
+                    dataPost
+                  );
+                  setDataMessage(null);
+                  setDataFile(null);
+                  dispatch(dispatchFetchMessage());
+
+                  // socket.emit("text_message", {
+                  //   message: linkify(value),
+                  //   conversation_id: room_id,
+                  //   from: user_id,
+                  //   to: current_conversation.user_id,
+                  //   type: containsUrl(value) ? "Link" : "Text",
+                  // });
                 }}
               >
                 <PaperPlaneTilt color="#ffffff" />

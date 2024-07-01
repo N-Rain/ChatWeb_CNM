@@ -1,13 +1,19 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "../../utils/axios";
 // import S3 from "../../utils/s3";
+<<<<<<< HEAD
 import {v4} from 'uuid';
+=======
+import { v4 } from "uuid";
+>>>>>>> 65daf82 (finish)
 import S3 from "../../utils/s3";
 import { S3_BUCKET_NAME } from "../../config";
 // ----------------------------------------------------------------------
 
 const initialState = {
+  messageSearch: "",
   user: {},
+  isCheckFetch: false,
   sideBar: {
     open: false,
     type: "CONTACT", // can be CONTACT, STARRED, SHARED
@@ -83,6 +89,15 @@ const slice = createSlice({
       state.chat_type = "individual";
       state.room_id = action.payload.room_id;
     },
+    dispatchFetchMessage(state, action) {
+      state.isCheckFetch = true;
+    },
+    dispatchFetchMessageFalse(state, action) {
+      state.isCheckFetch = false;
+    },
+    searchChatMessage(state, action) {
+      state.messageSearch = action.payload;
+    },
   },
 });
 
@@ -94,7 +109,12 @@ export default slice.reducer;
 export const closeSnackBar = () => async (dispatch, getState) => {
   dispatch(slice.actions.closeSnackBar());
 };
-
+export const dispatchFetchMessage = () => async (dispatch, getState) => {
+  dispatch(slice.actions.dispatchFetchMessage());
+};
+export const dispatchFetchMessageFalse = () => async (dispatch, getState) => {
+  dispatch(slice.actions.dispatchFetchMessageFalse());
+};
 export const showSnackbar =
   ({ severity, message }) =>
   async (dispatch, getState) => {
@@ -118,6 +138,12 @@ export function ToggleSidebar() {
 export function UpdateSidebarType(type) {
   return async (dispatch, getState) => {
     dispatch(slice.actions.updateSideBarType({ type }));
+  };
+}
+export function searchChatMessage(chatMessage) {
+  console.log(chatMessage, "chatMessagechatMessage");
+  return async (dispatch, getState) => {
+    dispatch(slice.actions.searchChatMessage(chatMessage));
   };
 }
 export function UpdateTab(tab) {
@@ -234,7 +260,9 @@ export const FetchCallLogs = () => {
       })
       .then((response) => {
         console.log(response);
-        dispatch(slice.actions.fetchCallLogs({ call_logs: response.data.data }));
+        dispatch(
+          slice.actions.fetchCallLogs({ call_logs: response.data.data })
+        );
       })
       .catch((err) => {
         console.log(err);
@@ -277,7 +305,12 @@ export const SendGroupMessage = ({ groupId, message }) => {
       .then((response) => {
         console.log(response);
         // Assuming the response contains updated group chat details
-        dispatch(slice.actions.updateGroupChat({ groupId, messages: response.data.data.messages }));
+        dispatch(
+          slice.actions.updateGroupChat({
+            groupId,
+            messages: response.data.data.messages,
+          })
+        );
       })
       .catch((err) => {
         console.log(err);
@@ -287,6 +320,7 @@ export const SendGroupMessage = ({ groupId, message }) => {
 
 export const UpdateUserProfile = (formValues) => {
   return async (dispatch, getState) => {
+<<<<<<< HEAD
     const file = formValues.avatar;
 
     const key = v4();
@@ -318,6 +352,12 @@ export const UpdateUserProfile = (formValues) => {
       .patch(
         "/user/update-me",
         { ...formValues, avatar: key },
+=======
+    axios
+      .patch(
+        "/user/update-me",
+        { ...formValues, avatar: formValues.avatar },
+>>>>>>> 65daf82 (finish)
         {
           headers: {
             "Content-Type": "application/json",
@@ -333,4 +373,8 @@ export const UpdateUserProfile = (formValues) => {
         console.log(err);
       });
   };
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> 65daf82 (finish)

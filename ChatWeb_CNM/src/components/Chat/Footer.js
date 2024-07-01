@@ -35,6 +35,7 @@ const StyledInput = styled(TextField)(({ theme }) => ({
 
 const Actions = [
   {
+    id:9,
     color: "#4da5fe",
     icon: <Image size={24} />,
     y: 102,
@@ -99,7 +100,10 @@ const ChatInput = ({
                 <Tooltip placement="right" title={el.title}>
                   <Fab
                     onClick={() => {
-                      setOpenActions(!openActions);
+                      if(el.id == 9){
+                        alert("ok");
+                      }
+                      // setOpenActions(!openActions);
                     }}
                     sx={{
                       position: "absolute",
